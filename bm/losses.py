@@ -6,6 +6,7 @@
 
 import torch
 import torch.nn.functional as F
+import numpy as np
 
 class _MaskedLoss(torch.nn.Module):
     def forward(self, estimate, output, mask=None):
@@ -120,6 +121,46 @@ class ClipLoss(torch.nn.Module):
             target = torch.arange(len(scores), device=estimate.device)
         return F.cross_entropy(scores, target)
 
+
+class SigClipLoss(ClipLoss):
+    def __init__(self, *args, probabilities=False, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+        self.t_prime = torch.nn.Parameter(torch.tensor(np.log(10)))
+        self.b = torch.nn.Parameter(torch.tensor(-np.log(10)))
+
+    def forward(self, estimate, candidate, mask=None):
+        # Utilize get_scores to compute the similarity scores between estimates and candidates
+        scores = self.get_scores(estimate, candidate)
+        
+        # Convert the mask to binary labels: 1 for positive, 0 for negative pairs
+        if mask is None:
+            raise ValueError("A mask indicating matching pairs must be provided")
+        labels = 2 * mask.float() - 1  # Adjusting mask values for BCE loss
+
+        # Compute the binary cross-entropy loss with logits
+        loss = F.binary_cross_entropy_with_logits(scores, labels, reduction='mean')
+
+        return loss
+
+    def get_scores(self, estimates, candidates):
+        # Assuming normalization and linear transformation are handled here if needed
+        # Flatten and normalize the embeddings as per requirement
+        estimates_flat = estimates.view(estimates.size(0), -1)
+        candidates_flat = candidates.view(candidates.size(0), -1)
+        estimates_norm = F.normalize(estimates_flat, p=2, dim=1)
+        candidates_norm = F.normalize(candidates_flat, p=2, dim=1)
+        
+        # Compute the logits using matrix multiplication, temperature, and bias
+        t = torch.exp(self.t_prime)
+        logits = torch.matmul(estimates_norm, candidates_norm.transpose(-2, -1)) * t + self.b
+        return logits
+
+    def get_probabilities(self, estimates, candidates):
+        # Compute logits to obtain scores for probabilities calculation
+        scores = self.get_scores(estimates, candidates)
+        probabilities = torch.sigmoid(scores)
+        return probabilities
 
 class FeatureDecodingLoss(torch.nn.Module):
     """
