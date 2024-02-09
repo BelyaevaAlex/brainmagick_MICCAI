@@ -12,7 +12,7 @@ from dora.log import LogProgress
 import torch
 from torch.utils.data import ConcatDataset, Dataset
 
-from .losses import ClipLoss
+from .losses import ClipLoss, SiglipLoss
 from .solver import Solver
 
 logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ def get_wer(
     soft_correct = 0.
     correct_vocab = 0.
     clip = solver.loss
-    assert isinstance(clip, ClipLoss)
+    assert isinstance(clip, SiglipLoss)
     logprog = LogProgress(
         logger, zip(estimates, word_hashes, outputs),
         name="WER Rank", total=len(outputs), updates=solver.args.num_prints)

@@ -122,7 +122,7 @@ class ClipLoss(torch.nn.Module):
         return F.cross_entropy(scores, target)
 
 
-class SigClipLoss(ClipLoss):
+class SiglipLoss(ClipLoss):
     def __init__(self, *args, probabilities=False, **kwargs):
         super().__init__(*args, **kwargs)
     

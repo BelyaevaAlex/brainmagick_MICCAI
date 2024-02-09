@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import torch
 from bm import play
-from bm.losses import ClipLoss
+from bm.losses import ClipLoss, SiglipLoss
 from bm.train import main
 from omegaconf import OmegaConf
 from torch.utils.data import ConcatDataset, DataLoader, TensorDataset
@@ -318,8 +318,10 @@ def run_eval(evaluator, output_dir, n_negatives=20_000,
     if evaluator.solver.args.optim.loss != "clip":
         print(
             f"Initialising CLIP LOSS because loss= {evaluator.solver.args.optim.loss}")
-        clip = ClipLoss(**evaluator.solver.args.clip,
-                        dset_args=evaluator.solver.args.dset)
+        #clip = ClipLoss(**evaluator.solver.args.clip,
+                       # dset_args=evaluator.solver.args.dset)
+        clip = SiglipLoss(**evaluator.solver.args.clip,
+                       dset_args=evaluator.solver.args.dset)
     else:
         clip = evaluator.solver.loss
 

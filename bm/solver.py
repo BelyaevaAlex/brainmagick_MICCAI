@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 
 from .cache import Cache
 from .dataset import SegmentBatch
-from .losses import ClipLoss, FeatureDecodingLoss, L1Loss, L2Loss
+from .losses import ClipLoss, SiglipLoss, FeatureDecodingLoss, L1Loss, L2Loss
 from .metrics import ClassificationAcc, L2Reg, OnlineCorrelation
 from .norm import BatchScaler, ScaleReject
 from .svd import svd_penalty
@@ -87,6 +87,11 @@ class Solver(flashy.BaseSolver):
             kw.pop('save_best', None)
             kw.pop('sync_grad', None)
             loss = ClipLoss(**kw, dset_args=self.args.dset)
+        elif loss == 'siglip':
+            kw = dict(self.args.clip)
+            kw.pop('save_best', None)
+            kw.pop('sync_grad', None)
+            loss = SiglipLoss(**kw, dset_args=self.args.dset)
             if self.optimizer is not None:
                 self.optimizer.add_param_group({"params": loss.parameters()})
             return loss
