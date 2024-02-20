@@ -126,8 +126,8 @@ class SiglipLoss(ClipLoss):
     def __init__(self, *args, probabilities=False, **kwargs):
         super().__init__(*args, **kwargs)
     
-        self.t_prime = torch.nn.Parameter(torch.tensor(np.log(10)))
-        self.b = torch.nn.Parameter(torch.tensor(-np.log(10)))
+        self.t_prime = torch.nn.Parameter(torch.tensor(np.log(10), dtype=torch.float))
+        self.b = torch.nn.Parameter(torch.tensor(-10, dtype=torch.float))
 
     def forward(self, estimate, candidate, mask=None):
         # Utilize get_scores to compute the similarity scores between estimates and candidates

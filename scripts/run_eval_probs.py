@@ -315,13 +315,14 @@ def run_eval(evaluator, output_dir, n_negatives=20_000,
 
     # Probs (vocab)
     logger.info("Compute probabilities")
-    if evaluator.solver.args.optim.loss != "clip":
+    if evaluator.solver.args.optim.loss != "clip" and evaluator.solver.args.optim.loss != "siglip":
         print(
             f"Initialising CLIP LOSS because loss= {evaluator.solver.args.optim.loss}")
-        #clip = ClipLoss(**evaluator.solver.args.clip,
-                       # dset_args=evaluator.solver.args.dset)
-        clip = SiglipLoss(**evaluator.solver.args.clip,
-                       dset_args=evaluator.solver.args.dset)
+        clip = ClipLoss(**evaluator.solver.args.clip, dset_args=evaluator.solver.args.dset)
+    elif evaluator.solver.args.optim.loss == "siglip":
+        print(
+            f"Initialising SIGLIP LOSS because loss= {evaluator.solver.args.optim.loss}")
+        clip = SiglipLoss(**evaluator.solver.args.clip, dset_args=evaluator.solver.args.dset)
     else:
         clip = evaluator.solver.loss
 

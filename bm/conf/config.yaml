@@ -56,6 +56,7 @@ optim:
   negative_pool_size:   # size of the pool we sample negatives from
 
 clip:
+  name: clip
   linear:      # add a linear layer with the given dimension before CLIP.
   twin: true   # use the same model for the GT and estimate.
   pool: false  # pool in time before computing the loss.
