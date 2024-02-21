@@ -87,6 +87,7 @@ class Solver(flashy.BaseSolver):
             kw.pop('save_best', None)
             kw.pop('sync_grad', None)
             loss = ClipLoss(**kw, dset_args=self.args.dset)
+            return loss
         elif loss == 'siglip':
             kw = dict(self.args.clip)
             kw.pop('save_best', None)
