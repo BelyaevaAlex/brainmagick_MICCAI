@@ -29,9 +29,10 @@ class L2Loss(_MaskedLoss):
 class ClipLoss(torch.nn.Module):
     """CLIP (See Open AI CLIP) constrastive loss.
     """
-    def __init__(self, linear=None, twin=True, pool=False, tmin=None, tmax=None,
+    def __init__(self, name='clip', linear=None, twin=True, pool=False, tmin=None, tmax=None,
                  tmin_train=None, tmax_train=None, dset_args=None, center=False, probabilities =False):
         super().__init__()
+        self.name = name
         self.linear = None
         self.pool = pool
         self.center = center
@@ -134,20 +135,33 @@ class SiglipLoss(ClipLoss):
         scores = self.get_scores(estimate, candidate)
         
         # Convert the mask to binary labels: 1 for positive, 0 for negative pairs
-        if mask is None:
-            raise ValueError("A mask indicating matching pairs must be provided")
-        labels = 2 * mask.float() - 1  # Adjusting mask values for BCE loss
+        # if mask is None:
+        #     raise ValueError("A mask indicating matching pairs must be provided")
+        # labels = 2 * mask.float() - 1  # Adjusting mask values for BCE loss
+
+        labels = 2 * torch.eye(scores.shape[0], dtype=scores.dtype, device=scores.device) - \
+                torch.ones(scores.shape[0], dtype=scores.dtype, device=scores.device)
 
         # Compute the binary cross-entropy loss with logits
-        loss = F.binary_cross_entropy_with_logits(scores, labels, reduction='mean')
+        loss = -torch.sum(F.logsigmoid(labels * scores)) / scores.shape[0]
 
         return loss
 
     def get_scores(self, estimates, candidates):
+        estimates, candidates = self.trim_samples(estimates, candidates)
+        if self.linear:
+            estimates = self.linear_est(estimates)
+            candidates = self.linear_gt(candidates)
+        if self.pool:
+            estimates = estimates.mean(dim=2, keepdim=True)
+            candidates = candidates.mean(dim=2, keepdim=True)
+        if self.center:
+            estimates = estimates - estimates.mean(dim=(1, 2), keepdim=True)
+            candidates = candidates - candidates.mean(dim=(1, 2), keepdim=True)
         # Assuming normalization and linear transformation are handled here if needed
         # Flatten and normalize the embeddings as per requirement
-        estimates_flat = estimates.view(estimates.size(0), -1)
-        candidates_flat = candidates.view(candidates.size(0), -1)
+        estimates_flat = estimates.reshape(estimates.size(0), -1)
+        candidates_flat = candidates.reshape(candidates.size(0), -1)
         estimates_norm = F.normalize(estimates_flat, p=2, dim=1)
         candidates_norm = F.normalize(candidates_flat, p=2, dim=1)
         

@@ -49,6 +49,9 @@ def get_solver(args: tp.Any, training=True):
     kwargs["selections"] = selections
     if args.optim.loss == "clip":
         kwargs['extra_test_features'].append("WordHash")
+    
+    if args.optim.loss == "siglip":
+        kwargs['extra_test_features'].append("WordHash")
 
     dsets = dset.get_datasets(
         num_workers=args.num_workers, progress=True,

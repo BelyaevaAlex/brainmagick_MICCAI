@@ -28,7 +28,7 @@ simpleconv:
   conv_dropout: 0.0
 
 optim:
-  loss: clip
+  loss: siglip
   epochs: 200
   max_batches: 1200
   batch_size: 256
